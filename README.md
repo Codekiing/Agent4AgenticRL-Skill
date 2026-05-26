@@ -10,35 +10,6 @@
 - `.claude/skills/`：已编译好的 Claude Code slash skills
 - `.claude/settings.json`：Claude Code hooks 配置，用于记录工具调用轨迹
 
-## Clone 后能不能直接使用？
-
-**可以直接被 Claude Code 识别为 skill 仓库，但训练功能不等于零配置可跑。**
-
-Clone 后在仓库根目录打开 Claude Code，`.claude/skills/` 下的 slash skills 可以直接被 Claude Code 发现，例如：
-
-```text
-/rllm-train
-/rllm-config
-/rllm-monitor
-/traj-loop
-/traj-status
-```
-
-但真正启动训练还需要满足运行条件：
-
-1. 安装 Python 依赖
-2. 准备模型访问能力或本地模型
-3. 准备 HuggingFace Dataset 格式的数据集路径
-4. 根据机器显存/设备调整 batch、generation、length 等参数
-
-本仓库**不包含**：
-
-- 模型权重
-- 训练数据集
-- 训练输出目录
-- checkpoint
-- API token / SSH 密码 / 本地私密配置
-
 ## 推荐目录结构
 
 ```text
@@ -149,6 +120,48 @@ answer
 | `/traj-optimize` | 根据轨迹分析生成 skill patch |
 | `/traj-loop` | 多轮训练-分析-优化闭环 |
 | `/traj-train-optimize` | 对某一轮训练结果执行优化 |
+
+## Skill 运行流图
+
+### rllm 训练流
+
+```mermaid
+flowchart TD
+    U[用户训练口令] --> T[/rllm-train/]
+    T --> C1[/rllm-clarify\n解析模型、目标、数据集/]
+    C1 --> C2[/rllm-config\n生成 config.json/]
+    C2 --> R[/rllm-run\n启动训练进程/]
+    R --> M[/rllm-monitor\n固定 schema 逐 step 监控/]
+    M -->|正常完成| A[/rllm-analyze\n分析 reward、loss、轨迹/]
+    M -->|熔断| C2
+    A -->|未达标，给出调参建议| C2
+    A -->|达标| Done[输出最终训练报告]
+```
+
+### traj 技能优化流
+
+```mermaid
+flowchart TD
+    H[Claude Code Hooks] --> O[traj_opt/output\n工具调用轨迹]
+    O --> S[/traj-segment\n轨迹分段/]
+    S --> AR[/traj-analyze-rllm\n提取失败模式/]
+    AR --> P[/traj-optimize\n生成 skill patch/]
+    P --> B[skill-bank\nbase + patches]
+    B --> Compile[compile.py]
+    Compile --> CS[.claude/skills]
+    CS --> T[/rllm-train 使用新版 skill/]
+```
+
+### 双层闭环
+
+```mermaid
+flowchart LR
+    RLLM[rllm: 训练具体 agent] --> Logs[训练日志 + trajectories]
+    Logs --> TRAJ[traj: 分析训练过程]
+    TRAJ --> Patch[优化 rllm skills]
+    Patch --> RLLM
+    Patch --> Package[stable / experimental / vertical / task-package]
+```
 
 ## Monitor 固定输出格式
 
@@ -266,91 +279,6 @@ traj_opt/output/
 ```
 
 该目录是运行时生成物，不会提交到仓库。
-
-## 当前限制
-
-### 1. 远程训练 skills 还不是开箱即用
-
-仓库中包含：
-
-```text
-/rllm-remote-connect
-/rllm-remote-run
-/rllm-remote-monitor
-```
-
-但这些 skills 引用了尚未随仓库提供的 `rllm_remote/` 运行时模块。因此远程/NPU 训练能力目前需要你后续补齐 `rllm_remote/`，否则不要把这些 remote skills 当成可直接运行功能。
-
-### 2. `setup.py` 仍继承自 AgentSDK
-
-当前 `setup.py` 来自原 AgentSDK 项目，仍包含 `agentic_rl` 打包逻辑。如果本仓库只作为 skill 工作包使用，不建议直接依赖：
-
-```bash
-pip install -e .
-```
-
-优先使用：
-
-```bash
-pip install -r requirements_gpu.txt
-```
-
-后续可以把 `setup.py` 改成独立的 `agent4agenticrl-skill` 包配置。
-
-### 3. 外部数据集不显示 difficulty
-
-当 `dataset_path` 非空时，`difficulty` 不再展示、不写入新配置。题目难度由数据集本身决定。
-
-`difficulty` 只保留给旧的内置合成数据生成流程。
-
-## 不应提交的内容
-
-仓库 `.gitignore` 已排除：
-
-```text
-rllm_train/output/
-traj_opt/output/
-outputs/
-checkpoints/
-*.safetensors
-*.bin
-*.gguf
-.env
-cc_config
-.claude/settings.local.json
-```
-
-请不要提交：
-
-- API token
-- SSH 密码
-- 本地 Claude Code 私有配置
-- 模型权重
-- 数据集原始大文件
-- 训练输出和 checkpoint
-
-## 推荐验证清单
-
-Clone 后可先运行：
-
-```bash
-python skill-bank/compile.py --validate
-python skill-bank/compile.py --list-packages
-python skill-bank/compile.py --status
-```
-
-如果只想确认 skills 是否能被 Claude Code 识别：
-
-```bash
-claude
-```
-
-然后在 Claude Code 中查看可用 slash skills，或直接尝试：
-
-```text
-/rllm-train
-/traj-status
-```
 
 ## 维护建议
 
