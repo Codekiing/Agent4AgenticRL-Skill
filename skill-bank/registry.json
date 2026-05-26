@@ -1,0 +1,95 @@
+{
+  "schema_version": "1.0",
+  "compatibility_mode": true,
+  "paths": {
+    "skill_bank_root": "skill-bank",
+    "source_root": "skill-bank",
+    "runtime_output_root": ".claude/skills",
+    "compiled_snapshot_root": "skill-bank/compiled",
+    "packages_root": "skill-bank/packages",
+    "traj_output_root": "traj_opt/output",
+    "rllm_output_root": "rllm_train/output"
+  },
+  "stable": {
+    "current": "stable:rllm-stable-v3",
+    "packages": [
+      {
+        "id": "stable:rllm-stable-v1",
+        "type": "stable",
+        "status": "candidate",
+        "source_compiled_version": "v015",
+        "path": "skill-bank/packages/stable/rllm-stable-v1/manifest.json",
+        "source_snapshot": "skill-bank/compiled/v015"
+      },
+      {
+        "id": "stable:rllm-stable-v2",
+        "type": "stable",
+        "status": "candidate",
+        "source_compiled_version": "v018",
+        "path": "skill-bank/packages/stable/rllm-stable-v2/manifest.json",
+        "source_snapshot": "skill-bank/compiled/v018"
+      },
+      {
+        "id": "stable:rllm-stable-v3",
+        "type": "stable",
+        "status": "candidate",
+        "source_compiled_version": "v019",
+        "path": "skill-bank/packages/stable/rllm-stable-v3/manifest.json",
+        "source_snapshot": "skill-bank/compiled/v019"
+      }
+    ]
+  },
+  "experimental": {
+    "finance": {
+      "current": "experimental:finance:rllm-finance-exp-003",
+      "packages": [
+        {
+          "id": "experimental:finance:rllm-finance-exp-001",
+          "type": "experimental",
+          "status": "experimental",
+          "domain": "finance",
+          "base_package": "stable:rllm-stable-v1",
+          "path": "skill-bank/packages/experimental/finance/rllm-finance-exp-001/manifest.json"
+        },
+        {
+          "id": "experimental:finance:rllm-finance-exp-002",
+          "type": "experimental",
+          "status": "experimental",
+          "domain": "finance",
+          "base_package": "stable:rllm-stable-v2",
+          "path": "skill-bank/packages/experimental/finance/rllm-finance-exp-002/manifest.json"
+        },
+        {
+          "id": "experimental:finance:rllm-finance-exp-003",
+          "type": "experimental",
+          "status": "experimental",
+          "domain": "finance",
+          "base_package": "stable:rllm-stable-v3",
+          "path": "skill-bank/packages/experimental/finance/rllm-finance-exp-003/manifest.json"
+        }
+      ]
+    }
+  },
+  "vertical": {},
+  "task_packages": [],
+  "lineage_archive": [],
+  "known_source_gaps": [
+    {
+      "skill": "rllm-clarify",
+      "group": "rllm",
+      "status": "compiled_only",
+      "compiled_output": ".claude/skills/rllm-clarify/SKILL.md"
+    },
+    {
+      "skill": "rllm-run",
+      "group": "rllm",
+      "status": "compiled_only",
+      "compiled_output": ".claude/skills/rllm-run/SKILL.md"
+    }
+  ],
+  "selection_policy": {
+    "new_task_default": "stable.current_or_matching_vertical",
+    "task_packages_default": "do_not_use_unless_requested",
+    "lineage_archive_default": "do_not_use_unless_tracing_or_promoting"
+  }
+}
